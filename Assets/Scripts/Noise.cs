@@ -3,9 +3,9 @@ using UnityEngine;
 
 namespace Ocrambana.LandmassGeneration
 {
-    public static class Noise
+    internal static class Noise
     {
-        public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, float scale)
+        internal static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, float scale)
         {
             float[,] noiseMap = new float[mapWidth, mapHeight];
             float actualScale = scale;

@@ -9,6 +9,7 @@ namespace Ocrambana.LandmassGeneration
         public int  mapWidth = 10,
                     mapHeight = 10;
         public float noiseScale;
+        public bool autoUpdate;
 
         public void GenerateMap()
         {

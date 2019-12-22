@@ -10,7 +10,13 @@ namespace Ocrambana.LandmassGeneration
         public override void OnInspectorGUI()
         {
             MapGenerator mapGen = (MapGenerator)target;
-            DrawDefaultInspector();
+            if(DrawDefaultInspector())
+            {
+                if(mapGen.autoUpdate)
+                {
+                    mapGen.GenerateMap();
+                }
+            }
 
             if(GUILayout.Button("Generate"))
             {
