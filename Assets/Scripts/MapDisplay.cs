@@ -10,7 +10,8 @@ namespace Ocrambana.LandmassGeneration
         
         public void DrawNoiseMap(float[,] noiseMap)
         {
-            int width = noiseMap.GetLength(0),
+            int 
+                width = noiseMap.GetLength(0),
                 height = noiseMap.GetLength(1);
 
             Texture2D texture = new Texture2D(width, height);
