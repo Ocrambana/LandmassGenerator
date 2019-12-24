@@ -26,20 +26,47 @@ namespace Ocrambana.LandmassGeneration
 
         public bool autoUpdate;
 
+        private Noise noise = null;
+
         public void GenerateMap()
         {
-            float[,] noiseMap = Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, noiseScale, octaves, persistance, lacunarity, offset);
+            if (noise == null)
+            {
+                noise = Noise.Instance;
+            }
 
+            float[,] noiseMap = noise.GenerateMap(mapWidth, mapHeight, seed, noiseScale, octaves, persistance, lacunarity, offset);
+
+            DrawMap(noiseMap);
+        }
+
+        private void DrawMap(float[,] noiseMap)
+        {
+            MapDisplay display = FindObjectOfType<MapDisplay>();
+
+            if (drawMode == DrawMode.NoiseMap)
+            {
+                display.DrawTexture(TextureGenerator.TextureFromHeightMap(noiseMap));
+            }
+            else if (drawMode == DrawMode.ColorMap)
+            {
+                Color[] colorMap = GenerateColorMap(noiseMap);
+                display.DrawTexture(TextureGenerator.TextureFromColorMap(colorMap, mapWidth, mapHeight));
+            }
+        }
+
+        private Color[] GenerateColorMap(float[,] noiseMap)
+        {
             Color[] colorMap = new Color[mapWidth * mapHeight];
 
-            for(int j = 0; j < mapHeight; j++)
-                for(int i = 0; i < mapWidth; i++)
+            for (int j = 0; j < mapHeight; j++)
+                for (int i = 0; i < mapWidth; i++)
                 {
                     float currentHeight = noiseMap[i, j];
 
-                    foreach(TerrainType region in regions)
+                    foreach (TerrainType region in regions)
                     {
-                        if(currentHeight <= region.height)
+                        if (currentHeight <= region.height)
                         {
                             colorMap[j * mapWidth + i] = region.color;
                             break;
@@ -47,17 +74,7 @@ namespace Ocrambana.LandmassGeneration
                     }
                 }
 
-            MapDisplay display = FindObjectOfType<MapDisplay>();
-
-            if(drawMode == DrawMode.NoiseMap)
-            {
-                display.DrawTexture(TextureGenerator.TextureFromHeightMap(noiseMap));
-            }
-            else if(drawMode == DrawMode.ColorMap)
-            {
-                display.DrawTexture(TextureGenerator.TextureFromColorMap(colorMap, mapWidth, mapHeight));
-
-            }
+            return colorMap;
         }
 
         private void OnValidate()

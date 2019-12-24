@@ -3,9 +3,9 @@ using UnityEngine;
 
 namespace Ocrambana.LandmassGeneration
 {
-    public static class TextureGenerator 
+    internal static class TextureGenerator 
     {
-        public static Texture2D TextureFromColorMap(Color[] colorMap, int width, int height)
+        internal static Texture2D TextureFromColorMap(Color[] colorMap, int width, int height)
         {
             Texture2D texture = new Texture2D(width, height);
             texture.filterMode = FilterMode.Point;
@@ -15,7 +15,7 @@ namespace Ocrambana.LandmassGeneration
             return texture;
         }
 
-        public static Texture2D TextureFromHeightMap(float[,] heightMap)
+        internal static Texture2D TextureFromHeightMap(float[,] heightMap)
         {
             int
                 width = heightMap.GetLength(0),
