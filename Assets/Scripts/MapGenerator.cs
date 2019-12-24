@@ -6,6 +6,9 @@ namespace Ocrambana.LandmassGeneration
 {
     public class MapGenerator : MonoBehaviour
     {
+        public enum DrawMode { NoiseMap, ColorMap };
+        public DrawMode drawMode;
+
         public int
             mapWidth = 10,
             mapHeight = 10;
@@ -19,14 +22,42 @@ namespace Ocrambana.LandmassGeneration
         public int seed;
         public Vector2 offset;
 
+        public TerrainType[] regions;
+
         public bool autoUpdate;
 
         public void GenerateMap()
         {
             float[,] noiseMap = Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, noiseScale, octaves, persistance, lacunarity, offset);
 
+            Color[] colorMap = new Color[mapWidth * mapHeight];
+
+            for(int j = 0; j < mapHeight; j++)
+                for(int i = 0; i < mapWidth; i++)
+                {
+                    float currentHeight = noiseMap[i, j];
+
+                    foreach(TerrainType region in regions)
+                    {
+                        if(currentHeight <= region.height)
+                        {
+                            colorMap[j * mapWidth + i] = region.color;
+                            break;
+                        }
+                    }
+                }
+
             MapDisplay display = FindObjectOfType<MapDisplay>();
-            display.DrawNoiseMap(noiseMap);
+
+            if(drawMode == DrawMode.NoiseMap)
+            {
+                display.DrawTexture(TextureGenerator.TextureFromHeightMap(noiseMap));
+            }
+            else if(drawMode == DrawMode.ColorMap)
+            {
+                display.DrawTexture(TextureGenerator.TextureFromColorMap(colorMap, mapWidth, mapHeight));
+
+            }
         }
 
         private void OnValidate()
@@ -52,5 +83,13 @@ namespace Ocrambana.LandmassGeneration
             }
 
         }
+    }
+
+    [System.Serializable]
+    public struct TerrainType
+    {
+        public string name;
+        public float height;
+        public Color color;
     }
 }

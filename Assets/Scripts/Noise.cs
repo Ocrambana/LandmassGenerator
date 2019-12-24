@@ -45,7 +45,6 @@ namespace Ocrambana.LandmassGeneration
                 }
             }
 
-
             noiseMap = NormalizeNoiseMap(maxNoiseHeight, minNoiseHeight, noiseMap);
 
             return noiseMap;
