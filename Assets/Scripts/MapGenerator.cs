@@ -6,7 +6,7 @@ namespace Ocrambana.LandmassGeneration
 {
     public class MapGenerator : MonoBehaviour
     {
-        public enum DrawMode { NoiseMap, ColorMap };
+        public enum DrawMode { NoiseMap, ColorMap, Mesh };
         public DrawMode drawMode;
 
         public int
@@ -43,6 +43,7 @@ namespace Ocrambana.LandmassGeneration
         private void DrawMap(float[,] noiseMap)
         {
             MapDisplay display = FindObjectOfType<MapDisplay>();
+            Color[] colorMap = GenerateColorMap(noiseMap);
 
             if (drawMode == DrawMode.NoiseMap)
             {
@@ -50,8 +51,12 @@ namespace Ocrambana.LandmassGeneration
             }
             else if (drawMode == DrawMode.ColorMap)
             {
-                Color[] colorMap = GenerateColorMap(noiseMap);
                 display.DrawTexture(TextureGenerator.TextureFromColorMap(colorMap, mapWidth, mapHeight));
+            }
+            else if(drawMode == DrawMode.Mesh)
+            {
+
+                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(noiseMap), TextureGenerator.TextureFromColorMap(colorMap, mapWidth, mapHeight));
             }
         }
 
