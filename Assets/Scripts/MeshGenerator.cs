@@ -6,27 +6,31 @@ namespace Ocrambana.LandmassGeneration
 {
     internal static class MeshGenerator 
     {
-        public static MeshData GenerateTerrainMesh(float[,] heightMap)
+        public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve heightCurve, int levelOfDetail)
         {
             int width = heightMap.GetLength(0),
-                height = heightMap.GetLength(1);
+                height = heightMap.GetLength(1),
+                meshSimplificationIncrement = levelOfDetail == 0 ? 1 : levelOfDetail * 2,
+                verticesPerLine = (width - 1) / meshSimplificationIncrement + 1;
 
             float   topLeftX = (width - 1) / -2f,
                     topLeftZ = (height - 1) / 2f;
 
-            MeshData meshData = new MeshData(width, height);
+            MeshData meshData = new MeshData(verticesPerLine, verticesPerLine);
             int vertexIndex = 0;
 
-            for(int j = 0; j < height; j++)
-                for(int i = 0; i < width; i++)
+            for(int j = 0; j < height; j+= meshSimplificationIncrement)
+                for(int i = 0; i < width; i += meshSimplificationIncrement)
                 {
-                    meshData.vertices[vertexIndex] = new Vector3(topLeftX + i, heightMap[i, j], topLeftZ - j);
+                    meshData.vertices[vertexIndex] = new Vector3(topLeftX + i,
+                        heightCurve.Evaluate(heightMap[i, j])* heightMultiplier,
+                        topLeftZ - j);
                     meshData.uvs[vertexIndex] = new Vector2( i / (float)width, j /(float)height);
 
                     if(i < width - 1 && j < height - 1)
                     {
-                        meshData.AddTriangle(vertexIndex, vertexIndex + width + 1, vertexIndex + width);
-                        meshData.AddTriangle(vertexIndex + width + 1, vertexIndex , vertexIndex + 1);
+                        meshData.AddTriangle(vertexIndex, vertexIndex + verticesPerLine + 1, vertexIndex + verticesPerLine);
+                        meshData.AddTriangle(vertexIndex + verticesPerLine + 1, vertexIndex , vertexIndex + 1);
                     }
 
                     vertexIndex++;

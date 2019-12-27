@@ -9,11 +9,9 @@ namespace Ocrambana.LandmassGeneration
         public enum DrawMode { NoiseMap, ColorMap, Mesh };
         public DrawMode drawMode;
 
-        public int
-            mapWidth = 10,
-            mapHeight = 10;
+        [Range(0,6)]
+        public int levelofDetail;
         public float noiseScale;
-
         public int octaves;
         [Range(0f,1f)]
         public float persistance = 0.5f;
@@ -22,11 +20,16 @@ namespace Ocrambana.LandmassGeneration
         public int seed;
         public Vector2 offset;
 
+        [Range(1f,1000f)]
+        public float meshHeightMultiplier;
+        public AnimationCurve meshheightCurve;
+
         public TerrainType[] regions;
 
         public bool autoUpdate;
 
         private Noise noise = null;
+        private const int mapChunkSize = 241;
 
         public void GenerateMap()
         {
@@ -35,7 +38,7 @@ namespace Ocrambana.LandmassGeneration
                 noise = Noise.Instance;
             }
 
-            float[,] noiseMap = noise.GenerateMap(mapWidth, mapHeight, seed, noiseScale, octaves, persistance, lacunarity, offset);
+            float[,] noiseMap = noise.GenerateMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, offset);
 
             DrawMap(noiseMap);
         }
@@ -51,21 +54,21 @@ namespace Ocrambana.LandmassGeneration
             }
             else if (drawMode == DrawMode.ColorMap)
             {
-                display.DrawTexture(TextureGenerator.TextureFromColorMap(colorMap, mapWidth, mapHeight));
+                display.DrawTexture(TextureGenerator.TextureFromColorMap(colorMap, mapChunkSize, mapChunkSize));
             }
             else if(drawMode == DrawMode.Mesh)
             {
 
-                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(noiseMap), TextureGenerator.TextureFromColorMap(colorMap, mapWidth, mapHeight));
+                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(noiseMap, meshHeightMultiplier, meshheightCurve, levelofDetail), TextureGenerator.TextureFromColorMap(colorMap, mapChunkSize, mapChunkSize));
             }
         }
 
         private Color[] GenerateColorMap(float[,] noiseMap)
         {
-            Color[] colorMap = new Color[mapWidth * mapHeight];
+            Color[] colorMap = new Color[mapChunkSize * mapChunkSize];
 
-            for (int j = 0; j < mapHeight; j++)
-                for (int i = 0; i < mapWidth; i++)
+            for (int j = 0; j < mapChunkSize; j++)
+                for (int i = 0; i < mapChunkSize; i++)
                 {
                     float currentHeight = noiseMap[i, j];
 
@@ -73,7 +76,7 @@ namespace Ocrambana.LandmassGeneration
                     {
                         if (currentHeight <= region.height)
                         {
-                            colorMap[j * mapWidth + i] = region.color;
+                            colorMap[j * mapChunkSize + i] = region.color;
                             break;
                         }
                     }
@@ -84,16 +87,6 @@ namespace Ocrambana.LandmassGeneration
 
         private void OnValidate()
         {
-            if(mapWidth < 1)
-            {
-                mapWidth = 1;
-            }
-
-            if(mapHeight < 1)
-            {
-                mapHeight = 1;
-            }
-
             if(lacunarity < 1)
             {
                 lacunarity = 1;
