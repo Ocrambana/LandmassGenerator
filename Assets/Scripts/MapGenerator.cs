@@ -29,7 +29,7 @@ namespace Ocrambana.LandmassGeneration
         public bool autoUpdate;
 
         private Noise noise = null;
-        private const int mapChunkSize = 241;
+        public const int mapChunkSize = 241;
 
         public void GenerateMap()
         {
