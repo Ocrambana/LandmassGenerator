@@ -8,6 +8,7 @@ namespace Ocrambana.LandmassGeneration
     {
         public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve heightCurve, int levelOfDetail)
         {
+            AnimationCurve myHeightCurve = new AnimationCurve(heightCurve.keys);
             int width = heightMap.GetLength(0),
                 height = heightMap.GetLength(1),
                 meshSimplificationIncrement = levelOfDetail == 0 ? 1 : levelOfDetail * 2,
@@ -23,7 +24,7 @@ namespace Ocrambana.LandmassGeneration
                 for(int i = 0; i < width; i += meshSimplificationIncrement)
                 {
                     meshData.vertices[vertexIndex] = new Vector3(topLeftX + i,
-                        heightCurve.Evaluate(heightMap[i, j])* heightMultiplier,
+                        myHeightCurve.Evaluate(heightMap[i, j]) * heightMultiplier,
                         topLeftZ - j);
                     meshData.uvs[vertexIndex] = new Vector2( i / (float)width, j /(float)height);
 
