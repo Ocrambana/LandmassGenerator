@@ -32,7 +32,6 @@ namespace Ocrambana.LandmassGeneration
 
         public const int mapChunkSize = 241;
 
-        private Noise noise = null;
         private Queue<MapThreadInfo<MapData>> mapDataInfoQueue = new Queue<MapThreadInfo<MapData>>(); 
         private Queue<MapThreadInfo<MeshData>> meshDataInfoQueue = new Queue<MapThreadInfo<MeshData>>(); 
 
@@ -112,12 +111,7 @@ namespace Ocrambana.LandmassGeneration
 
         private MapData GenerateMapData()
         {
-            if (noise == null)
-            {
-                noise = Noise.Instance;
-            }
-
-            float[,] noiseMap = noise.GenerateMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, offset);
+            float[,] noiseMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, offset);
 
             Color[] colorMap = GenerateColorMap(noiseMap);
 
