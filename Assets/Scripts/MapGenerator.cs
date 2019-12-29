@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System;
+using System.Threading;
 using UnityEngine;
 
 namespace Ocrambana.LandmassGeneration
@@ -28,10 +30,87 @@ namespace Ocrambana.LandmassGeneration
 
         public bool autoUpdate;
 
-        private Noise noise = null;
         public const int mapChunkSize = 241;
 
-        public void GenerateMap()
+        private Noise noise = null;
+        private Queue<MapThreadInfo<MapData>> mapDataInfoQueue = new Queue<MapThreadInfo<MapData>>(); 
+        private Queue<MapThreadInfo<MeshData>> meshDataInfoQueue = new Queue<MapThreadInfo<MeshData>>(); 
+
+        public void DrawMapInEditor()
+        {
+            MapData mapData = GenerateMapData();
+            MapDisplay display = FindObjectOfType<MapDisplay>();
+
+            if (drawMode == DrawMode.NoiseMap)
+            {
+                display.DrawTexture(TextureGenerator.TextureFromHeightMap(mapData.heightMap));
+            }
+            else if (drawMode == DrawMode.ColorMap)
+            {
+                display.DrawTexture(TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
+            }
+            else if(drawMode == DrawMode.Mesh)
+            {
+
+                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshheightCurve, levelofDetail), TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
+            }
+        }
+
+        public void RequestMapData(Action<MapData> callback)
+        {
+            ThreadStart threadStart = delegate
+            {
+                MapDataThread(callback);
+            };
+
+            new Thread(threadStart).Start();
+        }
+
+        private void MapDataThread(Action<MapData> callback)
+        {
+            MapData mapData = GenerateMapData();
+
+            lock(mapDataInfoQueue)
+            {
+                mapDataInfoQueue.Enqueue(new MapThreadInfo<MapData>(callback, mapData));
+            }
+        }
+
+        public void RequestMeshData(MapData mapData, Action<MeshData> callback)
+        {
+            ThreadStart threadStart = delegate
+            {
+                MeshDataThread(mapData, callback);
+            };
+
+            new Thread(threadStart).Start();
+        }
+
+        private void MeshDataThread(MapData mapData, Action<MeshData> callback)
+        {
+            MeshData meshData = MeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshheightCurve, levelofDetail);
+            lock(meshDataInfoQueue)
+            {
+                meshDataInfoQueue.Enqueue(new MapThreadInfo<MeshData>(callback, meshData));
+            }
+        }
+
+        private void Update()
+        {
+            while(mapDataInfoQueue.Count > 0)
+            {
+                MapThreadInfo<MapData> threadinfo = mapDataInfoQueue.Dequeue();
+                threadinfo.callback(threadinfo.parameter);
+            }
+
+            while (meshDataInfoQueue.Count > 0)
+            {
+                MapThreadInfo<MeshData> threadinfo = meshDataInfoQueue.Dequeue();
+                threadinfo.callback(threadinfo.parameter);
+            }
+        }
+
+        private MapData GenerateMapData()
         {
             if (noise == null)
             {
@@ -40,27 +119,9 @@ namespace Ocrambana.LandmassGeneration
 
             float[,] noiseMap = noise.GenerateMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, offset);
 
-            DrawMap(noiseMap);
-        }
-
-        private void DrawMap(float[,] noiseMap)
-        {
-            MapDisplay display = FindObjectOfType<MapDisplay>();
             Color[] colorMap = GenerateColorMap(noiseMap);
 
-            if (drawMode == DrawMode.NoiseMap)
-            {
-                display.DrawTexture(TextureGenerator.TextureFromHeightMap(noiseMap));
-            }
-            else if (drawMode == DrawMode.ColorMap)
-            {
-                display.DrawTexture(TextureGenerator.TextureFromColorMap(colorMap, mapChunkSize, mapChunkSize));
-            }
-            else if(drawMode == DrawMode.Mesh)
-            {
-
-                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(noiseMap, meshHeightMultiplier, meshheightCurve, levelofDetail), TextureGenerator.TextureFromColorMap(colorMap, mapChunkSize, mapChunkSize));
-            }
+            return new MapData(noiseMap,colorMap);
         }
 
         private Color[] GenerateColorMap(float[,] noiseMap)
@@ -98,6 +159,18 @@ namespace Ocrambana.LandmassGeneration
             }
 
         }
+
+        struct MapThreadInfo<T>
+        {
+            public readonly Action<T> callback;
+            public readonly T parameter;
+
+            public MapThreadInfo(Action<T> callback, T parameter)
+            {
+                this.callback = callback;
+                this.parameter = parameter;
+            }
+        }
     }
 
     [System.Serializable]
@@ -106,5 +179,17 @@ namespace Ocrambana.LandmassGeneration
         public string name;
         public float height;
         public Color color;
+    }
+
+    public struct MapData
+    {
+        public readonly float[,] heightMap;
+        public readonly Color[] colorMap;
+
+        public MapData(float[,] heightMap, Color[] colorMap)
+        {
+            this.heightMap = heightMap;
+            this.colorMap = colorMap;
+        }
     }
 }

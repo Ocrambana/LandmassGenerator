@@ -8,6 +8,7 @@ namespace Ocrambana.LandmassGeneration
     {
         public const float maxViewDst = 450;
         public Transform viewer;
+        public Material mapMaterial;
 
         public static Vector2 viewerPosition;
         int chunkSize,
@@ -15,9 +16,11 @@ namespace Ocrambana.LandmassGeneration
 
         private Dictionary<Vector2, TerrainChunk> terrainChunkDictionary = new Dictionary<Vector2, TerrainChunk>();
         private List<TerrainChunk> terrainChunksVisibleLastUpdate = new List<TerrainChunk>();
+        private static MapGenerator mapGenerator;
 
         private void Start()
         {
+            mapGenerator = FindObjectOfType<MapGenerator>();
             chunkSize = MapGenerator.mapChunkSize - 1;
             chunksVisibleinViewDst = Mathf.RoundToInt( maxViewDst / chunkSize);
         }
@@ -55,7 +58,7 @@ namespace Ocrambana.LandmassGeneration
                     }
                     else
                     {
-                        terrainChunkDictionary.Add(viewedChunkCoord, new TerrainChunk(viewedChunkCoord, chunkSize, transform));
+                        terrainChunkDictionary.Add(viewedChunkCoord, new TerrainChunk(viewedChunkCoord, chunkSize, transform, mapMaterial));
                     }
                 }
 
@@ -63,21 +66,40 @@ namespace Ocrambana.LandmassGeneration
 
         public class TerrainChunk
         {
-            GameObject meshObject;
-            Vector2 position;
-            Bounds bounds;
+            private GameObject meshObject;
+            private Vector2 position;
+            private Bounds bounds;
 
-            public TerrainChunk(Vector2 coord, int size, Transform parent)
+            private MeshRenderer meshRenderer;
+            private MeshFilter meshFilter;
+
+            public TerrainChunk(Vector2 coord, int size, Transform parent, Material material)
             {
                 position = coord * size;
                 Vector3 positionV3 = new Vector3(position.x, 0, position.y);
                 bounds = new Bounds(position, Vector2.one * size);
 
-                meshObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
+                meshObject = new GameObject("Terrein Chunk");
+                meshRenderer = meshObject.AddComponent<MeshRenderer>();
+                meshRenderer.material = material;
+
+                meshFilter = meshObject.AddComponent<MeshFilter>();
+
                 meshObject.transform.position = positionV3;
-                meshObject.transform.localScale = Vector3.one * size / 10f;
                 meshObject.transform.SetParent(parent);
                 SetVisible(false);
+
+                mapGenerator.RequestMapData(OnMapDataReceived);
+            }
+
+            private void OnMapDataReceived(MapData mapData)
+            {
+                mapGenerator.RequestMeshData(mapData, OnMeshDataReceived);
+            }
+
+            private void OnMeshDataReceived(MeshData meshData)
+            {
+                meshFilter.mesh = meshData.CreateMesh();
             }
 
             public void UpdateTerrainChunk()
