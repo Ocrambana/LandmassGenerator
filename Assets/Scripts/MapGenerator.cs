@@ -12,7 +12,7 @@ namespace Ocrambana.LandmassGeneration
         public DrawMode drawMode;
 
         [Range(0,6)]
-        public int levelofDetail;
+        public int editorPreviewLOD;
         public float noiseScale;
         public int octaves;
         [Range(0f,1f)]
@@ -51,7 +51,7 @@ namespace Ocrambana.LandmassGeneration
             else if(drawMode == DrawMode.Mesh)
             {
 
-                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshheightCurve, levelofDetail), TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
+                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshheightCurve, editorPreviewLOD), TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
             }
         }
 
@@ -75,19 +75,19 @@ namespace Ocrambana.LandmassGeneration
             }
         }
 
-        public void RequestMeshData(MapData mapData, Action<MeshData> callback)
+        public void RequestMeshData(MapData mapData, int lod, Action<MeshData> callback)
         {
             ThreadStart threadStart = delegate
             {
-                MeshDataThread(mapData, callback);
+                MeshDataThread(mapData, lod, callback);
             };
 
             new Thread(threadStart).Start();
         }
 
-        private void MeshDataThread(MapData mapData, Action<MeshData> callback)
+        private void MeshDataThread(MapData mapData, int lod, Action<MeshData> callback)
         {
-            MeshData meshData = MeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshheightCurve, levelofDetail);
+            MeshData meshData = MeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshheightCurve, lod);
             lock(meshDataInfoQueue)
             {
                 meshDataInfoQueue.Enqueue(new MapThreadInfo<MeshData>(callback, meshData));
