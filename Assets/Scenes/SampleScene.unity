@@ -329,7 +329,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a18797d3464494f4f8b3f06091c56585, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  drawMode: 2
+  drawMode: 1
   editorPreviewLOD: 0
   noiseScale: 39.3
   octaves: 4
