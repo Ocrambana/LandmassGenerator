@@ -38,13 +38,13 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657844, g: 0.49641222, b: 0.57481694, a: 1}
+  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 11
-  m_GIWorkflowMode: 0
+  m_GIWorkflowMode: 1
   m_GISettings:
     serializedVersion: 2
     m_BounceScale: 1
@@ -438,11 +438,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   detailLevels:
   - lod: 0
+    visibleDistanceThreshold: 50
+  - lod: 1
+    visibleDistanceThreshold: 100
+  - lod: 2
+    visibleDistanceThreshold: 150
+  - lod: 3
     visibleDistanceThreshold: 200
   - lod: 4
-    visibleDistanceThreshold: 400
-  - lod: 6
-    visibleDistanceThreshold: 600
+    visibleDistanceThreshold: 250
+  - lod: 5
+    visibleDistanceThreshold: 300
   viewer: {fileID: 1856886006}
   mapMaterial: {fileID: 2100000, guid: 10e45c7ee52b55a4c837f917e4c59225, type: 2}
 --- !u!1 &1121619750

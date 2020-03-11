@@ -19,7 +19,7 @@ namespace Ocrambana.LandmassGeneration
             chunksVisibleinViewDst;
 
         private Dictionary<Vector2, TerrainChunk> terrainChunkDictionary = new Dictionary<Vector2, TerrainChunk>();
-        private List<TerrainChunk> terrainChunksVisibleLastUpdate = new List<TerrainChunk>();
+        private static List<TerrainChunk> terrainChunksVisibleLastUpdate = new List<TerrainChunk>();
         private static MapGenerator mapGenerator;
 
         private void Start()
@@ -62,10 +62,6 @@ namespace Ocrambana.LandmassGeneration
                     if (terrainChunkDictionary.ContainsKey(viewedChunkCoord))
                     {
                         terrainChunkDictionary[viewedChunkCoord].UpdateTerrainChunk();
-                        if(terrainChunkDictionary[viewedChunkCoord].IsVisible())
-                        {
-                            terrainChunksVisibleLastUpdate.Add(terrainChunkDictionary[viewedChunkCoord]);
-                        }
                     }
                     else
                     {
@@ -161,6 +157,8 @@ namespace Ocrambana.LandmassGeneration
                             lodMesh.RequestMesh(mapData);
                         }
                     }
+
+                    terrainChunksVisibleLastUpdate.Add(this);
                 }
                 
                 SetVisible(visible);
