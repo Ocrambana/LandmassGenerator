@@ -330,6 +330,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   drawMode: 1
+  normalizeMode: 1
   editorPreviewLOD: 0
   noiseScale: 39.3
   octaves: 4
@@ -371,21 +372,30 @@ MonoBehaviour:
     - serializedVersion: 3
       time: 1
       value: 1
-      inSlope: 2
-      outSlope: 2
+      inSlope: 0.8465384
+      outSlope: 0.8465384
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
+      outWeight: 0.12834248
+    - serializedVersion: 3
+      time: 1.8561363
+      value: 1.2199025
+      inSlope: 0.12859853
+      outSlope: 0.12859853
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.13477083
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
   regions:
   - name: Deep Water
-    height: 0.2
+    height: 0
     color: {r: 0.0039215437, g: 0.089774475, b: 0.9607843, a: 0}
   - name: Water
-    height: 0.4
+    height: 0.3
     color: {r: 0.10234957, g: 0.4006864, b: 0.8679245, a: 0}
   - name: Shallow Water
     height: 0.45
@@ -449,6 +459,8 @@ MonoBehaviour:
     visibleDistanceThreshold: 250
   - lod: 5
     visibleDistanceThreshold: 300
+  - lod: 6
+    visibleDistanceThreshold: 600
   viewer: {fileID: 1856886006}
   mapMaterial: {fileID: 2100000, guid: 10e45c7ee52b55a4c837f917e4c59225, type: 2}
 --- !u!1 &1121619750
@@ -617,7 +629,7 @@ Transform:
   m_GameObject: {fileID: 1232114846}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 100, y: 1, z: 100}
+  m_LocalScale: {x: 241, y: 1, z: 241}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1

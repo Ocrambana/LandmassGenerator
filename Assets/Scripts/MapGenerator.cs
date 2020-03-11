@@ -11,6 +11,8 @@ namespace Ocrambana.LandmassGeneration
         public enum DrawMode { NoiseMap, ColorMap, Mesh };
         public DrawMode drawMode;
 
+        public NormalizeMode normalizeMode;
+
         [Range(0,6)]
         public int editorPreviewLOD;
         public float noiseScale;
@@ -111,7 +113,7 @@ namespace Ocrambana.LandmassGeneration
 
         private MapData GenerateMapData(Vector2 center)
         {
-            float[,] noiseMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, center + offset);
+            float[,] noiseMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, center + offset, normalizeMode);
 
             Color[] colorMap = GenerateColorMap(noiseMap);
 
@@ -129,9 +131,12 @@ namespace Ocrambana.LandmassGeneration
 
                     foreach (TerrainType region in regions)
                     {
-                        if (currentHeight <= region.height)
+                        if (currentHeight >= region.height)
                         {
                             colorMap[j * mapChunkSize + i] = region.color;
+                        }
+                        else
+                        {
                             break;
                         }
                     }
