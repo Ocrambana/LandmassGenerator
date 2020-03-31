@@ -8,7 +8,7 @@ namespace Ocrambana.LandmassGeneration
 {
     public class MapGenerator : MonoBehaviour
     {
-        public enum DrawMode { NoiseMap, ColorMap, Mesh };
+        public enum DrawMode { NoiseMap, ColorMap, Mesh, FalloffMap };
         public DrawMode drawMode;
 
         public NormalizeMode normalizeMode;
@@ -24,6 +24,8 @@ namespace Ocrambana.LandmassGeneration
         public int seed;
         public Vector2 offset;
 
+        public bool useFalloff;
+
         [Range(1f,1000f)]
         public float meshHeightMultiplier;
         public AnimationCurve meshheightCurve;
@@ -34,8 +36,15 @@ namespace Ocrambana.LandmassGeneration
 
         public const int mapChunkSize = 241;
 
+        float[,] falloffMap;
+
         private Queue<MapThreadInfo<MapData>> mapDataInfoQueue = new Queue<MapThreadInfo<MapData>>(); 
-        private Queue<MapThreadInfo<MeshData>> meshDataInfoQueue = new Queue<MapThreadInfo<MeshData>>(); 
+        private Queue<MapThreadInfo<MeshData>> meshDataInfoQueue = new Queue<MapThreadInfo<MeshData>>();
+
+        private void Awake()
+        {
+            falloffMap = FalloffGenerator.GenerateFallOffMap(mapChunkSize);
+        }
 
         public void DrawMapInEditor()
         {
@@ -52,8 +61,11 @@ namespace Ocrambana.LandmassGeneration
             }
             else if(drawMode == DrawMode.Mesh)
             {
-
                 display.DrawMesh(MeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshheightCurve, editorPreviewLOD), TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
+            }
+            else if(drawMode == DrawMode.FalloffMap)
+            {
+                display.DrawTexture(TextureGenerator.TextureFromHeightMap(falloffMap));
             }
         }
 
@@ -127,6 +139,11 @@ namespace Ocrambana.LandmassGeneration
             for (int j = 0; j < mapChunkSize; j++)
                 for (int i = 0; i < mapChunkSize; i++)
                 {
+                    if(useFalloff)
+                    {
+                        noiseMap[i,j] = Mathf.Clamp01( noiseMap[i, j] - falloffMap[i, j]); 
+                    }
+
                     float currentHeight = noiseMap[i, j];
 
                     foreach (TerrainType region in regions)
@@ -157,6 +174,7 @@ namespace Ocrambana.LandmassGeneration
                 octaves = 0;
             }
 
+            falloffMap = FalloffGenerator.GenerateFallOffMap(mapChunkSize);
         }
 
         struct MapThreadInfo<T>
