@@ -34,7 +34,7 @@ namespace Ocrambana.LandmassGeneration
 
         public bool autoUpdate;
 
-        public const int mapChunkSize = 241;
+        public const int mapChunkSize = 239;
 
         float[,] falloffMap;
 
@@ -125,7 +125,7 @@ namespace Ocrambana.LandmassGeneration
 
         private MapData GenerateMapData(Vector2 center)
         {
-            float[,] noiseMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, center + offset, normalizeMode);
+            float[,] noiseMap = Noise.GenerateNoiseMap(mapChunkSize + 2, mapChunkSize + 2, seed, noiseScale, octaves, persistance, lacunarity, center + offset, normalizeMode);
 
             Color[] colorMap = GenerateColorMap(noiseMap);
 

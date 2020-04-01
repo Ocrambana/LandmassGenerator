@@ -9,29 +9,57 @@ namespace Ocrambana.LandmassGeneration
         public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve heightCurve, int levelOfDetail)
         {
             AnimationCurve myHeightCurve = new AnimationCurve(heightCurve.keys);
-            int width = heightMap.GetLength(0),
-                height = heightMap.GetLength(1),
+            int borderedSize = heightMap.GetLength(0),
                 meshSimplificationIncrement = levelOfDetail == 0 ? 1 : levelOfDetail * 2,
-                verticesPerLine = (width - 1) / meshSimplificationIncrement + 1;
+                meshSize = borderedSize - 2 * meshSimplificationIncrement,
+                meshSizeUnsimplified = borderedSize - 2,
+                verticesPerLine = (meshSize - 1) / meshSimplificationIncrement + 1;
 
-            float   topLeftX = (width - 1) / -2f,
-                    topLeftZ = (height - 1) / 2f;
+            float   topLeftX = (meshSizeUnsimplified - 1) / -2f,
+                    topLeftZ = (meshSizeUnsimplified - 1) / 2f;
 
-            MeshData meshData = new MeshData(verticesPerLine, verticesPerLine);
-            int vertexIndex = 0;
+            MeshData meshData = new MeshData(verticesPerLine);
 
-            for(int j = 0; j < height; j+= meshSimplificationIncrement)
-                for(int i = 0; i < width; i += meshSimplificationIncrement)
+            int[,] vertexIndicesMap = new int[borderedSize, borderedSize];
+            int meshVertexIndex = 0,
+                borderVertexIndex = -1;
+
+            for (int j = 0; j < borderedSize; j += meshSimplificationIncrement)
+                for (int i = 0; i < borderedSize; i += meshSimplificationIncrement)
                 {
-                    meshData.vertices[vertexIndex] = new Vector3(topLeftX + i,
-                        myHeightCurve.Evaluate(heightMap[i, j]) * heightMultiplier,
-                        topLeftZ - j);
-                    meshData.uvs[vertexIndex] = new Vector2( i / (float)width, j /(float)height);
+                    bool isBorderVertex = j == 0 || j == borderedSize - 1 || i == 0 || i == borderedSize - 1;
 
-                    if(i < width - 1 && j < height - 1)
+                    if(isBorderVertex)
                     {
-                        meshData.AddTriangle(vertexIndex, vertexIndex + verticesPerLine + 1, vertexIndex + verticesPerLine);
-                        meshData.AddTriangle(vertexIndex + verticesPerLine + 1, vertexIndex , vertexIndex + 1);
+                        vertexIndicesMap[i, j] = borderVertexIndex;
+                        borderVertexIndex--;
+                    }
+                    else
+                    {
+                        vertexIndicesMap[i, j] = meshVertexIndex;
+                        meshVertexIndex++;
+                    }
+                }
+
+            for (int j = 0; j < borderedSize; j += meshSimplificationIncrement)
+                for(int i = 0; i < borderedSize; i += meshSimplificationIncrement)
+                {
+                    int vertexIndex = vertexIndicesMap[i, j];
+                    Vector2 percent = new Vector2( ( i - meshSimplificationIncrement) / (float)meshSize, ( j - meshSimplificationIncrement ) / (float)meshSize);
+                    float height = myHeightCurve.Evaluate(heightMap[i, j]) * heightMultiplier;
+                    Vector3 vertexPosition = new Vector3(topLeftX + percent.x * meshSizeUnsimplified, height, topLeftZ - percent.y * meshSizeUnsimplified);
+
+                    meshData.AddVertex(vertexPosition, percent, vertexIndex);
+
+                    if(i < borderedSize - 1 && j < borderedSize - 1)
+                    {
+                        int a = vertexIndicesMap[i, j],
+                            b = vertexIndicesMap[i + meshSimplificationIncrement, j],
+                            c = vertexIndicesMap[i, j + meshSimplificationIncrement],
+                            d = vertexIndicesMap[i + meshSimplificationIncrement, j + meshSimplificationIncrement];
+                        
+                        meshData.AddTriangle(a,d,c);
+                        meshData.AddTriangle(d,a,b);
                     }
 
                     vertexIndex++;
@@ -43,25 +71,125 @@ namespace Ocrambana.LandmassGeneration
 
     public class MeshData
     {
-        public Vector3[] vertices;
-        public int[] triangles;
-        public Vector2[] uvs;
+        private Vector3[] vertices;
+        private int[] triangles;
+        private Vector2[] uvs;
+
+        private Vector3[] borderVertices;
+        private int[] borderTrinagles;
 
         private int triangleIndex;
+        int borderTriangleIndex;
 
-        public MeshData(int meshWidth, int meshHeight)
+        public MeshData(int verticesPerLine)
         {
-            vertices = new Vector3[meshHeight * meshWidth];
-            uvs = new Vector2[meshHeight * meshWidth];
-            triangles = new int[(meshWidth - 1) * (meshHeight - 1) * 6];
+            vertices = new Vector3[verticesPerLine * verticesPerLine];
+            uvs = new Vector2[verticesPerLine * verticesPerLine];
+            triangles = new int[(verticesPerLine - 1) * (verticesPerLine - 1) * 6];
+
+            borderVertices = new Vector3[verticesPerLine * 4 + 4];
+            borderTrinagles = new int[24 * verticesPerLine];
+        }
+
+        public void AddVertex(Vector3 vertexPosition, Vector2 uv, int vertexIndex)
+        { 
+            if(vertexIndex < 0)
+            {
+                borderVertices[-vertexIndex - 1] = vertexPosition;
+            }
+            else
+            {
+                vertices[vertexIndex] = vertexPosition;
+                uvs[vertexIndex] = uv;
+            }
         }
 
         public void AddTriangle(int a, int b, int c)
         {
-            triangles[triangleIndex] = a;
-            triangles[triangleIndex + 1] = b;
-            triangles[triangleIndex + 2] = c;
-            triangleIndex += 3;
+            if(a < 0 || b < 0 || c < 0)
+            {
+                borderTrinagles[borderTriangleIndex] = a;
+                borderTrinagles[borderTriangleIndex + 1] = b;
+                borderTrinagles[borderTriangleIndex + 2] = c;
+                borderTriangleIndex += 3;
+            }
+            else
+            {
+                triangles[triangleIndex] = a;
+                triangles[triangleIndex + 1] = b;
+                triangles[triangleIndex + 2] = c;
+                triangleIndex += 3;
+            }
+            
+        }
+
+        private Vector3[] CalculateNormals()
+        {
+            Vector3[] vertexNormals = new Vector3[vertices.Length];
+            int triangleCount = triangles.Length / 3;
+
+            for(int i = 0; i< triangleCount; i++)
+            {
+                int normalTriangleIndex = i * 3;
+                int vertexIndexA = triangles[normalTriangleIndex];
+                int vertexIndexB = triangles[normalTriangleIndex + 1];
+                int vertexIndexC = triangles[normalTriangleIndex + 2];
+
+                Vector3 triangleNormal = SurfaceNormalFromIndices(vertexIndexA, vertexIndexB, vertexIndexC);
+                vertexNormals[vertexIndexA] += triangleNormal;
+                vertexNormals[vertexIndexB] += triangleNormal;
+                vertexNormals[vertexIndexC] += triangleNormal;
+            }
+
+            int borderTriangleCount = borderTrinagles.Length / 3;
+            for(int i = 0; i< borderTriangleCount; i++)
+            {
+                int normalTriangleIndex = i * 3;
+                int vertexIndexA = borderTrinagles[normalTriangleIndex];
+                int vertexIndexB = borderTrinagles[normalTriangleIndex + 1];
+                int vertexIndexC = borderTrinagles[normalTriangleIndex + 2];
+
+                Vector3 triangleNormal = SurfaceNormalFromIndices(vertexIndexA, vertexIndexB, vertexIndexC);
+
+                if(vertexIndexA >= 0)
+                {
+                    vertexNormals[vertexIndexA] += triangleNormal;
+                }
+
+                if(vertexIndexB >= 0)
+                {
+                    vertexNormals[vertexIndexB] += triangleNormal;
+                }
+
+                if(vertexIndexC >= 0)
+                {
+                    vertexNormals[vertexIndexC] += triangleNormal;
+                }
+            }
+
+            for (int i = 0; i < vertexNormals.Length; i++)
+            {
+                vertexNormals[i].Normalize();
+            }
+
+            return vertexNormals; 
+        }
+
+        private Vector3 SurfaceNormalFromIndices(int indexA, int indexB, int indexC)
+        {
+            Vector3 pointA = GetVertex(indexA);
+            Vector3 pointB = GetVertex(indexB);
+            Vector3 pointC = GetVertex(indexC);
+
+            Vector3 sideAB = pointB - pointA;
+            Vector3 sideAC = pointC - pointA;
+
+            return Vector3.Cross(sideAB, sideAC).normalized;
+        }
+
+        private Vector3 GetVertex(int index)
+        {
+            return (index < 0) ? borderVertices[-index - 1] : vertices[index]; 
         }
 
         public Mesh CreateMesh()
@@ -70,7 +198,7 @@ namespace Ocrambana.LandmassGeneration
             mesh.vertices = vertices;
             mesh.triangles = triangles;
             mesh.uv = uvs;
-            mesh.RecalculateNormals();
+            mesh.normals = CalculateNormals();
             return mesh;
         }
     }
