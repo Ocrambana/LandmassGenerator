@@ -65,6 +65,8 @@ namespace Ocrambana.LandmassGeneration
                     vertexIndex++;
                 }
 
+            meshData.BakeNormals();
+
             return meshData;
         }
     }
@@ -74,6 +76,7 @@ namespace Ocrambana.LandmassGeneration
         private Vector3[] vertices;
         private int[] triangles;
         private Vector2[] uvs;
+        private Vector3[] bakedNormals;
 
         private Vector3[] borderVertices;
         private int[] borderTrinagles;
@@ -192,13 +195,18 @@ namespace Ocrambana.LandmassGeneration
             return (index < 0) ? borderVertices[-index - 1] : vertices[index]; 
         }
 
+        public void BakeNormals()
+        {
+            bakedNormals = CalculateNormals();
+        }
+
         public Mesh CreateMesh()
         {
             Mesh mesh = new Mesh();
             mesh.vertices = vertices;
             mesh.triangles = triangles;
             mesh.uv = uvs;
-            mesh.normals = CalculateNormals();
+            mesh.normals = bakedNormals;
             return mesh;
         }
     }

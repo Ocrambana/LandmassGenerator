@@ -81,8 +81,10 @@ namespace Ocrambana.LandmassGeneration
 
             private MeshRenderer meshRenderer;
             private MeshFilter meshFilter;
+            private MeshCollider meshCollider;
             private LODInfo[] detailLevels;
             private LODMesh[] LODMeshes;
+            private LODMesh collisionLODMesh;
             private MapData mapData;
             private bool mapDataReceived;
             private int previousLODIndex = -1;       
@@ -99,6 +101,7 @@ namespace Ocrambana.LandmassGeneration
                 meshRenderer.material = material;
 
                 meshFilter = meshObject.AddComponent<MeshFilter>();
+                meshCollider = meshObject.AddComponent<MeshCollider>();
 
                 meshObject.transform.position = positionV3 * scale;
                 meshObject.transform.SetParent(parent);
@@ -109,6 +112,10 @@ namespace Ocrambana.LandmassGeneration
                 for(int i=0; i < detailLevels.Length; i++)
                 {
                     LODMeshes[i] = new LODMesh(detailLevels[i].lod, UpdateTerrainChunk);
+                    if(detailLevels[i].useForCollider)
+                    {
+                        collisionLODMesh = LODMeshes[i];
+                    }
                 }
 
                 mapGenerator.RequestMapData(position, OnMapDataReceived);
@@ -161,6 +168,17 @@ namespace Ocrambana.LandmassGeneration
                         }
                     }
 
+                    if(lodIndex == 0)
+                    {
+                        if(collisionLODMesh.hasMesh)
+                        {
+                            meshCollider.sharedMesh = collisionLODMesh.mesh;
+                        }
+                        else if(! collisionLODMesh.hasRequestedMesh)
+                        {
+                            collisionLODMesh.RequestMesh(mapData);
+                        }
+                    }
                     terrainChunksVisibleLastUpdate.Add(this);
                 }
                 
@@ -212,6 +230,7 @@ namespace Ocrambana.LandmassGeneration
         {
             public int lod;
             public float visibleDistanceThreshold;
+            public bool useForCollider;
         }
 
     }
