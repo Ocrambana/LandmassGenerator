@@ -6,7 +6,7 @@ namespace Ocrambana.LandmassGeneration
 {
     internal static class MeshGenerator 
     {
-        public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve heightCurve, int levelOfDetail)
+        public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve heightCurve, int levelOfDetail, bool useFlatShading)
         {
             AnimationCurve myHeightCurve = new AnimationCurve(heightCurve.keys);
             int borderedSize = heightMap.GetLength(0),
@@ -18,7 +18,7 @@ namespace Ocrambana.LandmassGeneration
             float   topLeftX = (meshSizeUnsimplified - 1) / -2f,
                     topLeftZ = (meshSizeUnsimplified - 1) / 2f;
 
-            MeshData meshData = new MeshData(verticesPerLine);
+            MeshData meshData = new MeshData(verticesPerLine, useFlatShading);
 
             int[,] vertexIndicesMap = new int[borderedSize, borderedSize];
             int meshVertexIndex = 0,
@@ -65,7 +65,7 @@ namespace Ocrambana.LandmassGeneration
                     vertexIndex++;
                 }
 
-            meshData.BakeNormals();
+            meshData.FinalizeMesh();
 
             return meshData;
         }
@@ -82,10 +82,14 @@ namespace Ocrambana.LandmassGeneration
         private int[] borderTrinagles;
 
         private int triangleIndex;
-        int borderTriangleIndex;
+        private int borderTriangleIndex;
 
-        public MeshData(int verticesPerLine)
+        private bool useFlatShading;
+
+        public MeshData(int verticesPerLine, bool useFlatShading)
         {
+            this.useFlatShading = useFlatShading;
+
             vertices = new Vector3[verticesPerLine * verticesPerLine];
             uvs = new Vector2[verticesPerLine * verticesPerLine];
             triangles = new int[(verticesPerLine - 1) * (verticesPerLine - 1) * 6];
@@ -195,9 +199,37 @@ namespace Ocrambana.LandmassGeneration
             return (index < 0) ? borderVertices[-index - 1] : vertices[index]; 
         }
 
-        public void BakeNormals()
+        public void FinalizeMesh()
+        {
+            if(useFlatShading)
+            {
+                FlatShading();
+            }
+            else
+            {
+                BakeNormals();
+            }
+        }
+
+        private void BakeNormals()
         {
             bakedNormals = CalculateNormals();
+        }
+
+        private void FlatShading()
+        {
+            Vector3[] flatShadedVertices = new Vector3[triangles.Length];
+            Vector2[] flatShadedUvs = new Vector2[triangles.Length];
+
+            for(int i = 0; i < triangles.Length; i++)
+            {
+                flatShadedVertices[i] = vertices[triangles[i]];
+                flatShadedUvs[i] = uvs[triangles[i]];
+                triangles[i] = i;
+            }
+
+            vertices = flatShadedVertices;
+            uvs = flatShadedUvs;
         }
 
         public Mesh CreateMesh()
@@ -206,7 +238,16 @@ namespace Ocrambana.LandmassGeneration
             mesh.vertices = vertices;
             mesh.triangles = triangles;
             mesh.uv = uvs;
-            mesh.normals = bakedNormals;
+
+            if(useFlatShading)
+            {
+                mesh.RecalculateNormals();
+            }
+            else
+            {
+                mesh.normals = bakedNormals;
+            }
+
             return mesh;
         }
     }
