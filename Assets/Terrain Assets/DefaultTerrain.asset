@@ -1,0 +1,105 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 512c357413d2b954c80ba5adccb109a1, type: 3}
+  m_Name: DefaultTerrain
+  m_EditorClassIdentifier: 
+  uniformScale: 2.5
+  useFlatShading: 0
+  useFalloff: 0
+  meshHeightMultiplier: 40
+  meshheightCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.2114036
+      value: -0.00036331033
+      inSlope: -0.006147634
+      outSlope: -0.006147634
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.34349445
+      value: -0.00021593494
+      inSlope: -0.00022403548
+      outSlope: -0.00022403548
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.45686167
+      value: 0.0029781878
+      inSlope: 0.11982661
+      outSlope: 0.11982661
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.05326382
+    - serializedVersion: 3
+      time: 0.8494737
+      value: 0.20075263
+      inSlope: 1.5236664
+      outSlope: 1.5236664
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.111438446
+      outWeight: 0.40534443
+    - serializedVersion: 3
+      time: 0.95005405
+      value: 0.4997232
+      inSlope: 4.600821
+      outSlope: 4.600821
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.15410458
+      outWeight: 0.78279257
+    - serializedVersion: 3
+      time: 0.9801978
+      value: 0.8962713
+      inSlope: 4.434794
+      outSlope: 4.434794
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.06587117
+      outWeight: 0.6326201
+    - serializedVersion: 3
+      time: 0.9986443
+      value: 0.99750197
+      inSlope: -3.3241515
+      outSlope: -3.3241515
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 1
+      outWeight: 0.16876319
+    - serializedVersion: 3
+      time: 1.0147328
+      value: 1.006926
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4

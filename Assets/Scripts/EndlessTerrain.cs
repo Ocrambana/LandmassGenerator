@@ -6,8 +6,6 @@ namespace Ocrambana.LandmassGeneration.Script
 {
     public class EndlessTerrain : MonoBehaviour
     {
-        const float scale = 1f;
-
         private const float viewerMoveThresholdForChunckUpdate = 25f;
         const float sqrViewerMoveThresholdForChunckUpdate = viewerMoveThresholdForChunckUpdate * viewerMoveThresholdForChunckUpdate;
         public LODInfo[] detailLevels;
@@ -35,7 +33,7 @@ namespace Ocrambana.LandmassGeneration.Script
 
         private void Update()
         {
-            viewerPosition = new Vector2(viewer.position.x, viewer.position.z) / scale;
+            viewerPosition = new Vector2(viewer.position.x, viewer.position.z) / mapGenerator.terrainData.uniformScale ;
 
             if((viewerPositionOld - viewerPosition).sqrMagnitude > sqrViewerMoveThresholdForChunckUpdate)
             {
@@ -103,9 +101,9 @@ namespace Ocrambana.LandmassGeneration.Script
                 meshFilter = meshObject.AddComponent<MeshFilter>();
                 meshCollider = meshObject.AddComponent<MeshCollider>();
 
-                meshObject.transform.position = positionV3 * scale;
+                meshObject.transform.position = positionV3 * mapGenerator.terrainData.uniformScale;
                 meshObject.transform.SetParent(parent);
-                meshObject.transform.localScale = Vector3.one * scale;
+                meshObject.transform.localScale = Vector3.one * mapGenerator.terrainData.uniformScale;
                 SetVisible(false);
 
                 LODMeshes = new LODMesh[detailLevels.Length];
