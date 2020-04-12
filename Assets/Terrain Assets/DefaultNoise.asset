@@ -12,10 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ba66097a57865a84e852747ffea79682, type: 3}
   m_Name: DefaultNoise
   m_EditorClassIdentifier: 
-  normalizeMode: 1
-  noiseScale: 22.3
-  octaves: 9
-  persistance: 0.572
-  lacunarity: 1.55
+  autoUpdate: 1
+  normalizeMode: 0
+  noiseScale: 31.7
+  octaves: 6
+  persistance: 0.5
+  lacunarity: 2
   offset: {x: 0, y: 0}
-  seed: 413
+  seed: 0

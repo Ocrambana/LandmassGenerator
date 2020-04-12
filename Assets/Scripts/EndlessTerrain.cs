@@ -26,7 +26,7 @@ namespace Ocrambana.LandmassGeneration.Script
         {
             maxViewDst = detailLevels[detailLevels.Length - 1].visibleDistanceThreshold;
             mapGenerator = FindObjectOfType<MapGenerator>();
-            chunkSize = MapGenerator.mapChunkSize - 1;
+            chunkSize = mapGenerator.mapChunkSize - 1;
             chunksVisibleinViewDst = Mathf.RoundToInt( maxViewDst / chunkSize);
             UpdateVisibleChunks();
         }
@@ -123,9 +123,6 @@ namespace Ocrambana.LandmassGeneration.Script
             {
                 this.mapData = mapData;
                 mapDataReceived = true;
-
-                Texture2D texture = TextureGenerator.TextureFromColorMap(mapData.colorMap, MapGenerator.mapChunkSize, MapGenerator.mapChunkSize);
-                meshRenderer.material.mainTexture = texture;
 
                 UpdateTerrainChunk();
             }

@@ -9,17 +9,17 @@ namespace Ocrambana.LandmassGeneration.Script
 {
     public class MapGenerator : MonoBehaviour
     {
-        public enum DrawMode { NoiseMap, ColorMap, Mesh, FalloffMap };
+        public enum DrawMode { NoiseMap, Mesh, FalloffMap };
         public DrawMode drawMode;
 
         public LandmassGeneration.Script.Data.TerrainData terrainData;
         public NoiseData noiseData;
+        public TextureData textureData;
+
+        public Material terrainMaterial;
 
         [Range(0,6)]
         public int editorPreviewLOD;
-
-        public TerrainType[] regions;
-        static MapGenerator instance;
 
         public bool autoUpdate;
 
@@ -28,16 +28,11 @@ namespace Ocrambana.LandmassGeneration.Script
         private Queue<MapThreadInfo<MapData>> mapDataInfoQueue = new Queue<MapThreadInfo<MapData>>(); 
         private Queue<MapThreadInfo<MeshData>> meshDataInfoQueue = new Queue<MapThreadInfo<MeshData>>();
 
-        public static int mapChunkSize
+        public int mapChunkSize
         {
             get
             {
-                if(MapGenerator.instance == null)
-                {
-                    MapGenerator.instance = FindObjectOfType<MapGenerator>();
-                }
-
-                if(MapGenerator.instance.terrainData.useFlatShading)
+                if(terrainData.useFlatShading)
                 {
                     return 95;
                 }
@@ -48,16 +43,19 @@ namespace Ocrambana.LandmassGeneration.Script
             }
         }
 
-        private void Awake()
-        {
-            falloffMap = FalloffGenerator.GenerateFallOffMap(mapChunkSize);
-        }
-
         private void OnValuesUpdated()
         {
             if(!Application.isPlaying)
             {
                 DrawMapInEditor();
+            }
+        }
+
+        private void OnTextureValuesUpdated()
+        {
+            if (!Application.isPlaying)
+            {
+                textureData.ApplyToMaterial(terrainMaterial);
             }
         }
 
@@ -70,13 +68,9 @@ namespace Ocrambana.LandmassGeneration.Script
             {
                 display.DrawTexture(TextureGenerator.TextureFromHeightMap(mapData.heightMap));
             }
-            else if (drawMode == DrawMode.ColorMap)
-            {
-                display.DrawTexture(TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
-            }
             else if(drawMode == DrawMode.Mesh)
             {
-                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(mapData.heightMap, terrainData.meshHeightMultiplier, terrainData.meshheightCurve, editorPreviewLOD, terrainData.useFlatShading), TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
+                display.DrawMesh(MeshGenerator.GenerateTerrainMesh(mapData.heightMap, terrainData.meshHeightMultiplier, terrainData.meshheightCurve, editorPreviewLOD, terrainData.useFlatShading));
             }
             else if(drawMode == DrawMode.FalloffMap)
             {
@@ -142,39 +136,21 @@ namespace Ocrambana.LandmassGeneration.Script
         {
             float[,] noiseMap = Noise.GenerateNoiseMap(mapChunkSize + 2, mapChunkSize + 2, noiseData.seed, noiseData.noiseScale, noiseData.octaves, noiseData.persistance, noiseData.lacunarity, center + noiseData.offset, noiseData.normalizeMode);
 
-            Color[] colorMap = GenerateColorMap(noiseMap);
-
-            return new MapData(noiseMap,colorMap);
-        }
-
-        private Color[] GenerateColorMap(float[,] noiseMap)
-        {
-            Color[] colorMap = new Color[mapChunkSize * mapChunkSize];
-
-            for (int j = 0; j < mapChunkSize; j++)
-                for (int i = 0; i < mapChunkSize; i++)
+            if(terrainData.useFalloff)
+            {
+                if(falloffMap == null || falloffMap.GetLength(0) != mapChunkSize)
                 {
-                    if(terrainData.useFalloff)
-                    {
-                        noiseMap[i,j] = Mathf.Clamp01( noiseMap[i, j] - falloffMap[i, j]); 
-                    }
-
-                    float currentHeight = noiseMap[i, j];
-
-                    foreach (TerrainType region in regions)
-                    {
-                        if (currentHeight >= region.height)
-                        {
-                            colorMap[j * mapChunkSize + i] = region.color;
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
+                    falloffMap = FalloffGenerator.GenerateFallOffMap(mapChunkSize + 2);
                 }
 
-            return colorMap;
+                for(int j = 0; j < mapChunkSize + 2; j++)
+                    for(int i = 0; i < mapChunkSize + 2; i++)
+                    {
+                        noiseMap[i, j] = Mathf.Clamp01(noiseMap[i, j] - falloffMap[i, j]);
+                    }
+            }
+
+            return new MapData(noiseMap);
         }
 
         private void OnValidate()
@@ -191,7 +167,13 @@ namespace Ocrambana.LandmassGeneration.Script
                 terrainData.OnValuesUpdated += OnValuesUpdated;
             }
 
-            falloffMap = FalloffGenerator.GenerateFallOffMap(mapChunkSize);
+            if(textureData != null)
+            {
+                textureData.OnValuesUpdated -= OnValuesUpdated;
+                textureData.OnValuesUpdated += OnValuesUpdated;
+            }
+
+            falloffMap = FalloffGenerator.GenerateFallOffMap(mapChunkSize + 2);
         }
 
         struct MapThreadInfo<T>
@@ -207,23 +189,13 @@ namespace Ocrambana.LandmassGeneration.Script
         }
     }
 
-    [System.Serializable]
-    public struct TerrainType
-    {
-        public string name;
-        public float height;
-        public Color color;
-    }
-
     public struct MapData
     {
         public readonly float[,] heightMap;
-        public readonly Color[] colorMap;
 
-        public MapData(float[,] heightMap, Color[] colorMap)
+        public MapData(float[,] heightMap)
         {
             this.heightMap = heightMap;
-            this.colorMap = colorMap;
         }
     }
 }
