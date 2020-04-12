@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Ocrambana.LandmassGeneration
+namespace Ocrambana.LandmassGeneration.Script
 {
     public class MapDisplay : MonoBehaviour
     {

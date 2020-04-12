@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
 
-namespace Ocrambana.LandmassGeneration
+namespace Ocrambana.LandmassGeneration.Script
 {
     internal static class TextureGenerator 
     {

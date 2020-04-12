@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
 
-namespace Ocrambana.LandmassGeneration
+namespace Ocrambana.LandmassGeneration.Script
 {
     public enum NormalizeMode { Local, Global };
 

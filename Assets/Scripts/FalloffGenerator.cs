@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Ocrambana.LandmassGeneration
+namespace Ocrambana.LandmassGeneration.Script
 {
     public static class FalloffGenerator
     {

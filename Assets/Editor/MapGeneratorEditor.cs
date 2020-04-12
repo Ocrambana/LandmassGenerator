@@ -1,8 +1,9 @@
 ﻿using System.Collections;
 using UnityEngine;
 using UnityEditor;
+using Ocrambana.LandmassGeneration.Script;
 
-namespace Ocrambana.LandmassGeneration
+namespace Ocrambana.LandmassGeneration.EditorExtension
 {
     [CustomEditor(typeof(MapGenerator))]
     public class MapGeneratorEditor : Editor

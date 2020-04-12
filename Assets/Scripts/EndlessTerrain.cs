@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Ocrambana.LandmassGeneration
+namespace Ocrambana.LandmassGeneration.Script
 {
     public class EndlessTerrain : MonoBehaviour
     {

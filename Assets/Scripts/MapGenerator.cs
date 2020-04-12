@@ -4,24 +4,16 @@ using System;
 using System.Threading;
 using UnityEngine;
 
-namespace Ocrambana.LandmassGeneration
+namespace Ocrambana.LandmassGeneration.Script
 {
     public class MapGenerator : MonoBehaviour
     {
         public enum DrawMode { NoiseMap, ColorMap, Mesh, FalloffMap };
         public DrawMode drawMode;
 
-        public NormalizeMode normalizeMode;
-
         [Range(0,6)]
         public int editorPreviewLOD;
-        public float noiseScale;
-        public int octaves;
-        [Range(0f,1f)]
-        public float persistance = 0.5f;
-        public float lacunarity = 2f;
-
-        public int seed;
+        
         public Vector2 offset;
 
         public bool useFalloff;
