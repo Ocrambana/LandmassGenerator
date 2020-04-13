@@ -150,6 +150,8 @@ namespace Ocrambana.LandmassGeneration.Script
                     }
             }
 
+            textureData.UpdateMeshHeights(terrainMaterial, terrainData.minHeight, terrainData.maxHeight);
+
             return new MapData(noiseMap);
         }
 
@@ -169,8 +171,8 @@ namespace Ocrambana.LandmassGeneration.Script
 
             if(textureData != null)
             {
-                textureData.OnValuesUpdated -= OnValuesUpdated;
-                textureData.OnValuesUpdated += OnValuesUpdated;
+                textureData.OnValuesUpdated -= OnTextureValuesUpdated;
+                textureData.OnValuesUpdated += OnTextureValuesUpdated;
             }
 
             falloffMap = FalloffGenerator.GenerateFallOffMap(mapChunkSize + 2);

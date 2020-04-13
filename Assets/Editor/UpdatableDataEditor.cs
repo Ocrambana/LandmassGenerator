@@ -18,6 +18,7 @@ namespace Ocrambana.LandmassGeneration.EditorExtension
             if(GUILayout.Button ("Update"))
             {
                 data.NotifyOfUpdatedValues();
+                EditorUtility.SetDirty(target);
             }
         }
 

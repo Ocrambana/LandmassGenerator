@@ -13,12 +13,13 @@ namespace Ocrambana.LandmassGeneration.Script.Data
         {
             if(autoUpdate)
             {
-                NotifyOfUpdatedValues();
+                UnityEditor.EditorApplication.update += NotifyOfUpdatedValues;
             }
         }
 
         public void NotifyOfUpdatedValues()
         {
+            UnityEditor.EditorApplication.update -= NotifyOfUpdatedValues;
             OnValuesUpdated?.Invoke();
         }
     }

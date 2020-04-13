@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   autoUpdate: 1
   uniformScale: 2.5
-  useFlatShading: 1
+  useFlatShading: 0
   useFalloff: 0
   meshHeightMultiplier: 40
   meshheightCurve:
@@ -30,73 +30,10 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 0.2114036
-      value: -0.00036331033
-      inSlope: -0.006147634
-      outSlope: -0.006147634
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 0.34349445
-      value: -0.00021593494
-      inSlope: -0.00022403548
-      outSlope: -0.00022403548
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 0.45686167
-      value: 0.0029781878
-      inSlope: 0.11982661
-      outSlope: 0.11982661
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.05326382
-    - serializedVersion: 3
-      time: 0.8494737
-      value: 0.20075263
-      inSlope: 1.5236664
-      outSlope: 1.5236664
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.111438446
-      outWeight: 0.40534443
-    - serializedVersion: 3
-      time: 0.95005405
-      value: 0.4997232
-      inSlope: 4.600821
-      outSlope: 4.600821
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.15410458
-      outWeight: 0.78279257
-    - serializedVersion: 3
-      time: 0.9801978
-      value: 0.8962713
-      inSlope: 4.434794
-      outSlope: 4.434794
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.06587117
-      outWeight: 0.6326201
-    - serializedVersion: 3
-      time: 0.9986443
-      value: 0.99750197
-      inSlope: -3.3241515
-      outSlope: -3.3241515
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 1
-      outWeight: 0.16876319
-    - serializedVersion: 3
-      time: 1.0147328
-      value: 1.006926
-      inSlope: 0
-      outSlope: 0
+      time: 1
+      value: 1
+      inSlope: 2
+      outSlope: 2
       tangentMode: 0
       weightedMode: 0
       inWeight: 0

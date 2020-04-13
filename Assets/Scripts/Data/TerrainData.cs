@@ -16,6 +16,22 @@ namespace Ocrambana.LandmassGeneration.Script.Data
         public float meshHeightMultiplier;
         public AnimationCurve meshheightCurve;
 
+        public float minHeight
+        {
+            get
+            {
+                return uniformScale * meshHeightMultiplier * meshheightCurve.Evaluate(0);
+            }
+        }
+
+        public float maxHeight
+        {
+            get
+            {
+                return uniformScale * meshHeightMultiplier * meshheightCurve.Evaluate(1);
+            }
+        }
+
         protected override void OnValidate()
         {
             if(uniformScale < 0)
