@@ -20,6 +20,8 @@ namespace Ocrambana.LandmassGeneration.Script.Data
 
         public int seed;
 
+        #if UNITY_EDITOR
+
         protected override void OnValidate()
         {
             if (lacunarity < 1)
@@ -34,5 +36,7 @@ namespace Ocrambana.LandmassGeneration.Script.Data
 
             base.OnValidate();
         }
+    
+        #endif
     }
 }

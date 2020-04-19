@@ -32,6 +32,8 @@ namespace Ocrambana.LandmassGeneration.Script.Data
             }
         }
 
+        #if UNITY_EDITOR
+
         protected override void OnValidate()
         {
             if(uniformScale < 0)
@@ -41,5 +43,7 @@ namespace Ocrambana.LandmassGeneration.Script.Data
 
             base.OnValidate();
         }
+
+        #endif
     }
 }

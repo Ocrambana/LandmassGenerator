@@ -43,6 +43,12 @@ namespace Ocrambana.LandmassGeneration.Script
             }
         }
 
+        private void Awake()
+        {
+            textureData.ApplyToMaterial(terrainMaterial);
+            textureData.UpdateMeshHeights(terrainMaterial, terrainData.minHeight, terrainData.maxHeight);
+        }
+
         private void OnValuesUpdated()
         {
             if(!Application.isPlaying)
@@ -61,6 +67,8 @@ namespace Ocrambana.LandmassGeneration.Script
 
         public void DrawMapInEditor()
         {
+            textureData.UpdateMeshHeights(terrainMaterial, terrainData.minHeight, terrainData.maxHeight);
+
             MapData mapData = GenerateMapData(Vector2.zero);
             MapDisplay display = FindObjectOfType<MapDisplay>();
 
@@ -149,8 +157,6 @@ namespace Ocrambana.LandmassGeneration.Script
                         noiseMap[i, j] = Mathf.Clamp01(noiseMap[i, j] - falloffMap[i, j]);
                     }
             }
-
-            textureData.UpdateMeshHeights(terrainMaterial, terrainData.minHeight, terrainData.maxHeight);
 
             return new MapData(noiseMap);
         }

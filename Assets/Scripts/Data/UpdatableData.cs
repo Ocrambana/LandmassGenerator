@@ -9,6 +9,8 @@ namespace Ocrambana.LandmassGeneration.Script.Data
         public System.Action OnValuesUpdated;
         public bool autoUpdate;
 
+        #if UNITY_EDITOR
+
         protected virtual void OnValidate()
         {
             if(autoUpdate)
@@ -22,5 +24,7 @@ namespace Ocrambana.LandmassGeneration.Script.Data
             UnityEditor.EditorApplication.update -= NotifyOfUpdatedValues;
             OnValuesUpdated?.Invoke();
         }
+
+        #endif
     }
 }
