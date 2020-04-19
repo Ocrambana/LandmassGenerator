@@ -10,9 +10,10 @@ namespace Ocrambana.LandmassGeneration.Script
         private const float sqrViewerMoveThresholdForChunckUpdate = viewerMoveThresholdForChunckUpdate * viewerMoveThresholdForChunckUpdate;
         private const float colliderGenerationDistanceThrehold = 5;
 
+        [Range(0, MeshGenerator.numSupportedLODs - 1)]
         public int colliderLODIndex;
         public LODInfo[] detailLevels;
-        public static float maxViewDst = 600f;
+        public static float maxViewDst = 800f;
         public Transform viewer;
         public Material mapMaterial;
 
@@ -22,7 +23,7 @@ namespace Ocrambana.LandmassGeneration.Script
             chunksVisibleinViewDst;
 
         private Dictionary<Vector2, TerrainChunk> terrainChunkDictionary = new Dictionary<Vector2, TerrainChunk>();
-        private static List<TerrainChunk> terrainChunksVisibleLastUpdate = new List<TerrainChunk>();
+        private static List<TerrainChunk> visibleTerrainChuncks = new List<TerrainChunk>();
         private static MapGenerator mapGenerator;
 
         private void Start()
@@ -40,7 +41,7 @@ namespace Ocrambana.LandmassGeneration.Script
 
             if(viewerPosition != viewerPositionOld)
             {
-                foreach(TerrainChunk chunk in terrainChunksVisibleLastUpdate)
+                foreach(TerrainChunk chunk in visibleTerrainChuncks)
                 {
                     chunk.UpdateCollisionMesh();
                 }
@@ -55,12 +56,12 @@ namespace Ocrambana.LandmassGeneration.Script
 
         private void UpdateVisibleChunks()
         {
-            foreach(TerrainChunk tc in terrainChunksVisibleLastUpdate)
+            HashSet<Vector2> alredyUpdateChunckCoords = new HashSet<Vector2>();
+            foreach(TerrainChunk tc in visibleTerrainChuncks.ToArray())
             {
-                tc.SetVisible(false);
+                alredyUpdateChunckCoords.Add(tc.coord);
+                tc.UpdateTerrainChunk();
             }
-
-            terrainChunksVisibleLastUpdate.Clear();
 
             int currentChunkCoordX = Mathf.RoundToInt(viewer.position.x / chunkSize);
             int currentChunkCoordY = Mathf.RoundToInt(viewer.position.z / chunkSize);
@@ -69,14 +70,16 @@ namespace Ocrambana.LandmassGeneration.Script
                 for(int xOffset = - chunksVisibleinViewDst; xOffset <= chunksVisibleinViewDst; xOffset++)
                 {
                     Vector2 viewedChunkCoord = new Vector2(currentChunkCoordX + xOffset, currentChunkCoordY + yOffset);
-
-                    if (terrainChunkDictionary.ContainsKey(viewedChunkCoord))
+                    if(! alredyUpdateChunckCoords.Contains(viewedChunkCoord))
                     {
-                        terrainChunkDictionary[viewedChunkCoord].UpdateTerrainChunk();
-                    }
-                    else
-                    {
-                        terrainChunkDictionary.Add(viewedChunkCoord, new TerrainChunk(viewedChunkCoord, chunkSize, detailLevels, colliderLODIndex, transform, mapMaterial));
+                        if (terrainChunkDictionary.ContainsKey(viewedChunkCoord))
+                        {
+                            terrainChunkDictionary[viewedChunkCoord].UpdateTerrainChunk();
+                        }
+                        else
+                        {
+                            terrainChunkDictionary.Add(viewedChunkCoord, new TerrainChunk(viewedChunkCoord, chunkSize, detailLevels, colliderLODIndex, transform, mapMaterial));
+                        }
                     }
                 }
 
@@ -84,6 +87,8 @@ namespace Ocrambana.LandmassGeneration.Script
 
         public class TerrainChunk
         {
+            public Vector2 coord;
+
             private GameObject meshObject;
             private Vector2 position;
             private Bounds bounds;
@@ -102,6 +107,7 @@ namespace Ocrambana.LandmassGeneration.Script
 
             public TerrainChunk(Vector2 coord, int size, LODInfo[] detailLevels, int colliderLODIndex, Transform parent, Material material)
             {
+                this.coord = coord;
                 this.detailLevels = detailLevels;
                 this.colliderLODIndex = colliderLODIndex;
 
@@ -149,6 +155,7 @@ namespace Ocrambana.LandmassGeneration.Script
                     return;
 
                 float viewerDstFromNearestEdge = Mathf.Sqrt( bounds.SqrDistance(viewerPosition));
+                bool wasVisible = IsVisible();
                 bool visible = viewerDstFromNearestEdge <= maxViewDst;
                 
                 if(visible)
@@ -181,10 +188,21 @@ namespace Ocrambana.LandmassGeneration.Script
                         }
                     }
 
-                    terrainChunksVisibleLastUpdate.Add(this);
                 }
                 
-                SetVisible(visible);
+                if(wasVisible != visible)
+                {
+                    if(visible)
+                    {
+                        visibleTerrainChuncks.Add(this);
+                    }
+                    else
+                    {
+                        visibleTerrainChuncks.Remove(this);
+                    }
+
+                    SetVisible(visible);
+                }
             }
 
             public void UpdateCollisionMesh()
@@ -258,6 +276,7 @@ namespace Ocrambana.LandmassGeneration.Script
         [System.Serializable]
         public struct LODInfo
         {
+            [Range(0, MeshGenerator.numSupportedLODs - 1)]
             public int lod;
             public float visibleDistanceThreshold;
 

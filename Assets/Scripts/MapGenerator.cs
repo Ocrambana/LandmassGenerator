@@ -18,7 +18,12 @@ namespace Ocrambana.LandmassGeneration.Script
 
         public Material terrainMaterial;
 
-        [Range(0,6)]
+        [Range(0, MeshGenerator.numSupportedChunckSizes - 1)]
+        public int chunkSizeIndex;
+        [Range(0, MeshGenerator.numSupportedFlatshadedChunckSizes - 1)]
+        public int flatshadedChunkSizeIndex;
+
+        [Range(0, MeshGenerator.numSupportedLODs - 1)]
         public int editorPreviewLOD;
 
         public bool autoUpdate;
@@ -34,11 +39,11 @@ namespace Ocrambana.LandmassGeneration.Script
             {
                 if(terrainData.useFlatShading)
                 {
-                    return 95;
+                    return MeshGenerator.supportedFlatshadedChuckSizes[flatshadedChunkSizeIndex] - 1;
                 }
                 else
                 {
-                    return 239;
+                    return MeshGenerator.supportedChuckSizes[chunkSizeIndex] - 1;
                 }
             }
         }
