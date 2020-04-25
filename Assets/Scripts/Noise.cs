@@ -7,41 +7,36 @@ namespace Ocrambana.LandmassGeneration.Script
 
     internal static class Noise
     {
-        internal static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, int seed, float scale, int octaves, float persistance, float lacunarity, Vector2 offset, NormalizeMode normalizeMode)
+        internal static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, NoiseSettings settings, Vector2 sampleCentre)
         {
             float[,] noiseMap = new float[mapWidth, mapHeight];
 
-            System.Random prng = new System.Random(seed);
-            Vector2[] octavesOffset = new Vector2[octaves];
+            System.Random prng = new System.Random(settings.seed);
+            Vector2[] octavesOffset = new Vector2[settings.octaves];
 
             float 
                 maxPossibleHeight = 0,
                 amplitude = 1,
                 frequency = 1;
 
-            for(int i = 0; i < octaves; i++)
+            for(int i = 0; i < settings.octaves; i++)
             {
-                float offsetX = prng.Next(-100000, 100000) + offset.x;
-                float offsetY = prng.Next(-100000, 100000) - offset.y;
+                float offsetX = prng.Next(-100000, 100000) + settings.offset.x + sampleCentre.x;
+                float offsetY = prng.Next(-100000, 100000) - settings.offset.y - sampleCentre.y;
                 octavesOffset[i] = new Vector2(offsetX, offsetY);
 
                 maxPossibleHeight += amplitude;
-                amplitude *= persistance;
+                amplitude *= settings.persistance;
             }
 
             float   
-                actualScale = scale,
+                actualScale = settings.scale,
                 maxLocalNoiseHeight = float.MinValue,
                 minLocalNoiseHeight = float.MaxValue;
 
             float
                 halfWIdth = mapWidth / 2f,
                 halfHeight = mapHeight / 2f;
-
-            if(scale <= 0)
-            {
-                actualScale = 0.0001f;
-            }
 
             for(int j = 0; j < mapHeight; j++)
             {
@@ -51,7 +46,7 @@ namespace Ocrambana.LandmassGeneration.Script
                     frequency = 1; 
                     float   noiseHeight = 0;
 
-                    for(int o = 0; o < octaves; o++)
+                    for(int o = 0; o < settings.octaves; o++)
                     {
                         float   
                             sampleX = (i - halfWIdth + octavesOffset[o].x) / actualScale * frequency ,
@@ -60,32 +55,23 @@ namespace Ocrambana.LandmassGeneration.Script
                         float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;
                         noiseHeight += perlinValue * amplitude;
 
-                        amplitude *= persistance;
-                        frequency *= lacunarity;
+                        amplitude *= settings.persistance;
+                        frequency *= settings.lacunarity;
                     }
                     
                     if(noiseHeight > maxLocalNoiseHeight)
                     {
                         maxLocalNoiseHeight = noiseHeight;
                     }
-                    else if(noiseHeight < minLocalNoiseHeight)
+
+                    if (noiseHeight < minLocalNoiseHeight)
                     {
                         minLocalNoiseHeight = noiseHeight;
                     }
 
                     noiseMap[i, j] = noiseHeight;
-                }
-            }
 
-            for (int j = 0; j < mapHeight; j++)
-            {
-                for (int i = 0; i < mapWidth; i++)
-                {
-                    if(normalizeMode == NormalizeMode.Local)
-                    {
-                        noiseMap[i, j] = Mathf.InverseLerp(minLocalNoiseHeight, maxLocalNoiseHeight, noiseMap[i, j]);
-                    }
-                    else
+                    if(settings.normalizeMode == NormalizeMode.Global)
                     {
                         float normalizedHeight = (noiseMap[i, j] + 1) / (maxPossibleHeight);
                         noiseMap[i, j] = Mathf.Clamp(normalizedHeight, 0, int.MaxValue);
@@ -93,7 +79,41 @@ namespace Ocrambana.LandmassGeneration.Script
                 }
             }
 
+            if(settings.normalizeMode == NormalizeMode.Local)
+            {
+                for (int j = 0; j < mapHeight; j++)
+                    for (int i = 0; i < mapWidth; i++)
+                    {
+                        noiseMap[i, j] = Mathf.InverseLerp(minLocalNoiseHeight, maxLocalNoiseHeight, noiseMap[i, j]);
+                    }
+                   
+            }
+
              return noiseMap;
+        }
+    }
+
+    [System.Serializable]
+    public class NoiseSettings
+    {
+        public NormalizeMode normalizeMode;
+
+        public float scale = 50;
+
+        public int octaves = 6;
+        [Range(0f, 1f)]
+        public float persistance = 0.5f;
+        public float lacunarity = 2f;
+
+        public Vector2 offset;
+        public int seed;
+
+        public void ValidateValues()
+        {
+            scale = Mathf.Max(scale, 0.01f);
+            octaves = Mathf.Max(octaves, 1);
+            lacunarity = Mathf.Max(lacunarity, 1);
+            persistance = Mathf.Clamp01(persistance);
         }
     }
 }

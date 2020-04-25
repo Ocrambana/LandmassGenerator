@@ -1,20 +1,14 @@
 ﻿using System.Collections;
 using System;
 using UnityEngine;
+using Ocrambana.LandmassGeneration.Script.Data;
 
 namespace Ocrambana.LandmassGeneration.Script
 {
     internal static class MeshGenerator 
     {
-        public const int numSupportedLODs = 5;
-        public const int numSupportedChunckSizes = 9;
-        public const int numSupportedFlatshadedChunckSizes = 3;
-        public static readonly int[] supportedChuckSizes = { 48, 72, 96, 120, 144, 168, 192, 216, 240 };
-        public static readonly int[] supportedFlatshadedChuckSizes = { 48, 72, 96 };
-
-        public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve heightCurve, int levelOfDetail, bool useFlatShading)
+        public static MeshData GenerateTerrainMesh(float[,] heightMap, MeshSettings meshSettings,int levelOfDetail)
         {
-            AnimationCurve myHeightCurve = new AnimationCurve(heightCurve.keys);
             int borderedSize = heightMap.GetLength(0),
                 meshSimplificationIncrement = levelOfDetail == 0 ? 1 : levelOfDetail * 2,
                 meshSize = borderedSize - 2 * meshSimplificationIncrement,
@@ -24,7 +18,7 @@ namespace Ocrambana.LandmassGeneration.Script
             float   topLeftX = (meshSizeUnsimplified - 1) / -2f,
                     topLeftZ = (meshSizeUnsimplified - 1) / 2f;
 
-            MeshData meshData = new MeshData(verticesPerLine, useFlatShading);
+            MeshData meshData = new MeshData(verticesPerLine, meshSettings.useFlatShading);
 
             int[,] vertexIndicesMap = new int[borderedSize, borderedSize];
             int meshVertexIndex = 0,
@@ -52,8 +46,8 @@ namespace Ocrambana.LandmassGeneration.Script
                 {
                     int vertexIndex = vertexIndicesMap[i, j];
                     Vector2 percent = new Vector2( ( i - meshSimplificationIncrement) / (float)meshSize, ( j - meshSimplificationIncrement ) / (float)meshSize);
-                    float height = myHeightCurve.Evaluate(heightMap[i, j]) * heightMultiplier;
-                    Vector3 vertexPosition = new Vector3(topLeftX + percent.x * meshSizeUnsimplified, height, topLeftZ - percent.y * meshSizeUnsimplified);
+                    float height = heightMap[i, j];
+                    Vector3 vertexPosition = new Vector3((topLeftX + percent.x * meshSizeUnsimplified) * meshSettings.meshScale, height, (topLeftZ - percent.y * meshSizeUnsimplified) * meshSettings.meshScale);
 
                     meshData.AddVertex(vertexPosition, percent, vertexIndex);
 

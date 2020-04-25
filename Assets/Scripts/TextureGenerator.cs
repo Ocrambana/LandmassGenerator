@@ -12,14 +12,15 @@ namespace Ocrambana.LandmassGeneration.Script
             texture.wrapMode = TextureWrapMode.Clamp;
             texture.SetPixels(colorMap);
             texture.Apply();
+
             return texture;
         }
 
-        internal static Texture2D TextureFromHeightMap(float[,] heightMap)
+        internal static Texture2D TextureFromHeightMap(HeightMap heightMap)
         {
             int
-                width = heightMap.GetLength(0),
-                height = heightMap.GetLength(1);
+                width = heightMap.values.GetLength(0),
+                height = heightMap.values.GetLength(1);
 
             Texture2D texture = new Texture2D(width, height);
 
@@ -29,7 +30,8 @@ namespace Ocrambana.LandmassGeneration.Script
             {
                 for (int i = 0; i < width; i++)
                 {
-                    colorMap[j * width + i] = Color.Lerp(Color.black, Color.white, heightMap[i, j]);
+                    float saturation = Mathf.InverseLerp(heightMap.minValue, heightMap.maxValue, heightMap.values[i, j]);
+                    colorMap[j * width + i] = Color.Lerp(Color.black, Color.white, saturation);
                 }
             }
 
