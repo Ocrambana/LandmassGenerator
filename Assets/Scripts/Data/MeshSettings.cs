@@ -26,7 +26,7 @@ namespace Ocrambana.LandmassGeneration.Script.Data
         {
             get
             {
-                return supportedChuckSizes[(useFlatShading)? flatshadedChunkSizeIndex : chunkSizeIndex] + 1;
+                return supportedChuckSizes[(useFlatShading)? flatshadedChunkSizeIndex : chunkSizeIndex] + 5;
             }
         }
 

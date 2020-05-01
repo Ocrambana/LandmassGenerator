@@ -9,60 +9,85 @@ namespace Ocrambana.LandmassGeneration.Script
     {
         public static MeshData GenerateTerrainMesh(float[,] heightMap, MeshSettings meshSettings,int levelOfDetail)
         {
-            int borderedSize = heightMap.GetLength(0),
-                meshSimplificationIncrement = levelOfDetail == 0 ? 1 : levelOfDetail * 2,
-                meshSize = borderedSize - 2 * meshSimplificationIncrement,
-                meshSizeUnsimplified = borderedSize - 2,
-                verticesPerLine = (meshSize - 1) / meshSimplificationIncrement + 1;
+            int skipIncrement = levelOfDetail == 0 ? 1 : levelOfDetail * 2;
 
-            float   topLeftX = (meshSizeUnsimplified - 1) / -2f,
-                    topLeftZ = (meshSizeUnsimplified - 1) / 2f;
+            int numVertsPerLine = meshSettings.numberOfVerticiesPerLine;
 
-            MeshData meshData = new MeshData(verticesPerLine, meshSettings.useFlatShading);
+            Vector2 topLeft = new Vector2(-1,1) * meshSettings.meshWorldSize / 2f;
 
-            int[,] vertexIndicesMap = new int[borderedSize, borderedSize];
+            MeshData meshData = new MeshData(numVertsPerLine, skipIncrement, meshSettings.useFlatShading);
+
+            int[,] vertexIndicesMap = new int[numVertsPerLine, numVertsPerLine];
             int meshVertexIndex = 0,
-                borderVertexIndex = -1;
+                outOfMeshVertexIndex = -1;
 
-            for (int j = 0; j < borderedSize; j += meshSimplificationIncrement)
-                for (int i = 0; i < borderedSize; i += meshSimplificationIncrement)
+            for (int j = 0; j < numVertsPerLine; j ++)
+                for (int i = 0; i < numVertsPerLine; i ++)
                 {
-                    bool isBorderVertex = j == 0 || j == borderedSize - 1 || i == 0 || i == borderedSize - 1;
+                    bool isOutOfMeshVertex = j == 0 || j == numVertsPerLine - 1 || i == 0 || i == numVertsPerLine - 1;
+                    bool isSkippedVertex = i > 2 && i < numVertsPerLine - 3 && j > 2 && j < numVertsPerLine - 3 && ((i - 2) % skipIncrement != 0 || (j - 2) % skipIncrement != 0);
 
-                    if(isBorderVertex)
+                    if(isOutOfMeshVertex)
                     {
-                        vertexIndicesMap[i, j] = borderVertexIndex;
-                        borderVertexIndex--;
+                        vertexIndicesMap[i, j] = outOfMeshVertexIndex;
+                        outOfMeshVertexIndex--;
                     }
-                    else
+                    else if(!isSkippedVertex)
                     {
                         vertexIndicesMap[i, j] = meshVertexIndex;
                         meshVertexIndex++;
                     }
                 }
 
-            for (int j = 0; j < borderedSize; j += meshSimplificationIncrement)
-                for(int i = 0; i < borderedSize; i += meshSimplificationIncrement)
+            for (int j = 0; j < numVertsPerLine; j ++)
+                for(int i = 0; i < numVertsPerLine; i ++)
                 {
-                    int vertexIndex = vertexIndicesMap[i, j];
-                    Vector2 percent = new Vector2( ( i - meshSimplificationIncrement) / (float)meshSize, ( j - meshSimplificationIncrement ) / (float)meshSize);
-                    float height = heightMap[i, j];
-                    Vector3 vertexPosition = new Vector3((topLeftX + percent.x * meshSizeUnsimplified) * meshSettings.meshScale, height, (topLeftZ - percent.y * meshSizeUnsimplified) * meshSettings.meshScale);
+                    bool isSkippedVertex = i > 2 && i < numVertsPerLine - 3 && j > 2 && j < numVertsPerLine - 3 && ((i - 2) % skipIncrement != 0 || (j - 2) % skipIncrement != 0);
 
-                    meshData.AddVertex(vertexPosition, percent, vertexIndex);
-
-                    if(i < borderedSize - 1 && j < borderedSize - 1)
+                    if (!isSkippedVertex)
                     {
-                        int a = vertexIndicesMap[i, j],
-                            b = vertexIndicesMap[i + meshSimplificationIncrement, j],
-                            c = vertexIndicesMap[i, j + meshSimplificationIncrement],
-                            d = vertexIndicesMap[i + meshSimplificationIncrement, j + meshSimplificationIncrement];
-                        
-                        meshData.AddTriangle(a,d,c);
-                        meshData.AddTriangle(d,a,b);
-                    }
+                        bool isOutOfMeshVertex = j == 0 || j == numVertsPerLine - 1 || i == 0 || i == numVertsPerLine - 1;
+                        bool isMeshEdgeVertex = (j == 1 || j == numVertsPerLine - 2 || i == 1 || i == numVertsPerLine - 2) && !isOutOfMeshVertex;
+                        bool isMainVertex = ((i - 2) % skipIncrement == 0 && (j - 2) % skipIncrement == 0) && !isOutOfMeshVertex && !isMeshEdgeVertex;
+                        bool isEdgeConnectionVertex = (j == 2 || j == numVertsPerLine - 3 || i == 2 || i == numVertsPerLine - 3) && !isOutOfMeshVertex && !isMeshEdgeVertex && !isMainVertex;
 
-                    vertexIndex++;
+                        int vertexIndex = vertexIndicesMap[i, j];
+                        Vector2 percent = new Vector2(i - 1, j - 1) / ( numVertsPerLine - 3 );
+                        float height = heightMap[i, j];
+                        Vector2 vertexPosition2D = topLeft + new Vector2(percent.x, - percent.y) * meshSettings.meshWorldSize;
+
+                        if(isEdgeConnectionVertex)
+                        {
+                            bool isVertical = i == 2 || i == numVertsPerLine - 3;
+
+                            int distanceToMainVertexA = (isVertical ? j - 2 : i - 2) % skipIncrement;
+                            int distanceToMainVertexB = skipIncrement - distanceToMainVertexA;
+
+                            float distancePercentFromAToB = distanceToMainVertexA / (float)skipIncrement;
+
+                            float heightMainVertexA = heightMap[(isVertical) ? i : i - distanceToMainVertexA, (isVertical) ? j - distanceToMainVertexA : j];
+                            float heightMainVertexB = heightMap[(isVertical) ? i : i + distanceToMainVertexB, (isVertical) ? j + distanceToMainVertexB : j];
+
+                            height = heightMainVertexA * (1 - distancePercentFromAToB) + heightMainVertexB * distancePercentFromAToB;
+                        }
+
+                        meshData.AddVertex(new Vector3(vertexPosition2D.x, height, vertexPosition2D.y), percent, vertexIndex);
+
+                        bool createTriangle = i < numVertsPerLine - 1 && j < numVertsPerLine - 1 && (!isEdgeConnectionVertex || ( i != 2 && j != 2));
+
+                        if(createTriangle)
+                        {
+                            int currentIncrement = (isMainVertex && i != numVertsPerLine - 3 && j != numVertsPerLine - 3) ? skipIncrement : 1;
+
+                            int a = vertexIndicesMap[i, j],
+                                b = vertexIndicesMap[i + currentIncrement, j],
+                                c = vertexIndicesMap[i, j + currentIncrement],
+                                d = vertexIndicesMap[i + currentIncrement, j + currentIncrement];
+                        
+                            meshData.AddTriangle(a,d,c);
+                            meshData.AddTriangle(d,a,b);
+                        }
+                    }
                 }
 
             meshData.FinalizeMesh();
@@ -78,31 +103,39 @@ namespace Ocrambana.LandmassGeneration.Script
         private Vector2[] uvs;
         private Vector3[] bakedNormals;
 
-        private Vector3[] borderVertices;
-        private int[] borderTrinagles;
+        private Vector3[] outOfMeshVertices;
+        private int[] outOfMeshTrinagles;
 
         private int triangleIndex;
-        private int borderTriangleIndex;
+        private int outOfMeshTriangleIndex;
 
         private bool useFlatShading;
 
-        public MeshData(int verticesPerLine, bool useFlatShading)
+        public MeshData(int numVertsPerLine, int skipIncrement, bool useFlatShading)
         {
             this.useFlatShading = useFlatShading;
 
-            vertices = new Vector3[verticesPerLine * verticesPerLine];
-            uvs = new Vector2[verticesPerLine * verticesPerLine];
-            triangles = new int[(verticesPerLine - 1) * (verticesPerLine - 1) * 6];
+            int numMeshEdgeVertices = (numVertsPerLine - 2) * 4 - 4;
+            int numEdgeConnectionVertices = (skipIncrement - 1) * (numVertsPerLine - 5) / skipIncrement * 4;
+            int numMainVerticesPerLine = (numVertsPerLine - 5) / skipIncrement + 1;
+            int numMainVertices = numMainVerticesPerLine * numMainVerticesPerLine;
 
-            borderVertices = new Vector3[verticesPerLine * 4 + 4];
-            borderTrinagles = new int[24 * verticesPerLine];
+            vertices = new Vector3[numMeshEdgeVertices + numEdgeConnectionVertices + numMainVertices];
+            uvs = new Vector2[vertices.Length];
+
+            int meshEdgeTriangles = (numVertsPerLine - 4) * 8;
+            int numMainTriangles = (numMainVerticesPerLine - 1) * (numMainVerticesPerLine - 1) * 2;
+            triangles = new int[(meshEdgeTriangles + numMainTriangles) * 3];
+
+            outOfMeshVertices = new Vector3[numVertsPerLine * 4 - 4];
+            outOfMeshTrinagles = new int[(numVertsPerLine - 2) * 24];
         }
 
         public void AddVertex(Vector3 vertexPosition, Vector2 uv, int vertexIndex)
         { 
             if(vertexIndex < 0)
             {
-                borderVertices[-vertexIndex - 1] = vertexPosition;
+                outOfMeshVertices[-vertexIndex - 1] = vertexPosition;
             }
             else
             {
@@ -115,10 +148,10 @@ namespace Ocrambana.LandmassGeneration.Script
         {
             if(a < 0 || b < 0 || c < 0)
             {
-                borderTrinagles[borderTriangleIndex] = a;
-                borderTrinagles[borderTriangleIndex + 1] = b;
-                borderTrinagles[borderTriangleIndex + 2] = c;
-                borderTriangleIndex += 3;
+                outOfMeshTrinagles[outOfMeshTriangleIndex] = a;
+                outOfMeshTrinagles[outOfMeshTriangleIndex + 1] = b;
+                outOfMeshTrinagles[outOfMeshTriangleIndex + 2] = c;
+                outOfMeshTriangleIndex += 3;
             }
             else
             {
@@ -148,13 +181,13 @@ namespace Ocrambana.LandmassGeneration.Script
                 vertexNormals[vertexIndexC] += triangleNormal;
             }
 
-            int borderTriangleCount = borderTrinagles.Length / 3;
+            int borderTriangleCount = outOfMeshTrinagles.Length / 3;
             for(int i = 0; i< borderTriangleCount; i++)
             {
                 int normalTriangleIndex = i * 3;
-                int vertexIndexA = borderTrinagles[normalTriangleIndex];
-                int vertexIndexB = borderTrinagles[normalTriangleIndex + 1];
-                int vertexIndexC = borderTrinagles[normalTriangleIndex + 2];
+                int vertexIndexA = outOfMeshTrinagles[normalTriangleIndex];
+                int vertexIndexB = outOfMeshTrinagles[normalTriangleIndex + 1];
+                int vertexIndexC = outOfMeshTrinagles[normalTriangleIndex + 2];
 
                 Vector3 triangleNormal = SurfaceNormalFromIndices(vertexIndexA, vertexIndexB, vertexIndexC);
 
@@ -196,7 +229,7 @@ namespace Ocrambana.LandmassGeneration.Script
 
         private Vector3 GetVertex(int index)
         {
-            return (index < 0) ? borderVertices[-index - 1] : vertices[index]; 
+            return (index < 0) ? outOfMeshVertices[-index - 1] : vertices[index]; 
         }
 
         public void FinalizeMesh()
