@@ -10,7 +10,7 @@ namespace Ocrambana.LandmassGeneration.Script.Data
         public NoiseSettings noiseSettings;
         public bool useFalloff;
 
-        [Range(1f, 100f)]
+        [Range(1f, 10000f)]
         public float heightMultiplier;
         public AnimationCurve heightCurve;
 
